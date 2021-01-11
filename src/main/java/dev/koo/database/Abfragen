@@ -1,4 +1,4 @@
-ResultSet set = SQLite.onQuery("SELECT gang FROM gangsystem WHERE name = '" + player.getName() + "' ORDER BY id DESC LIMIT 1");
+ResultSet set = SQLite.onQuery("SELECT channelid FROM verify WHERE name = '" + player.getName() + "' ORDER BY id DESC LIMIT 1");
 
                             try {
                                 if (set.next()) {

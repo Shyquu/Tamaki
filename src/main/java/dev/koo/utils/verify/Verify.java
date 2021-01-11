@@ -1,7 +1,7 @@
 package dev.koo.utils.verify;
 
 import dev.koo.api.Tamaki;
-import dev.koo.utils.text.Test;
+import dev.koo.database.SQLite;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.ServerTextChannelBuilder;
@@ -16,6 +16,10 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
 import java.awt.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.concurrent.ExecutionException;
 
 public class Verify {
@@ -41,35 +45,35 @@ public class Verify {
         api.addServerMemberJoinListener(serverMemberJoinEvent -> {
 
             User user = serverMemberJoinEvent.getUser();
-            System.out.println(user.getDiscriminatedName() + " gejoint.");
+            System.out.println(new Date() + user.getDiscriminatedName() + " gejoint.");
             user.addRole(api.getRoleById(797550949551833129L).get());
             Server server = serverMemberJoinEvent.getServer();
+
             try {
                 generateNewMemberChannel(user, server);
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println("Erfolg");
-            TextChannel channel = api.getTextChannelById(Test.getTest()).get();
+
+            ResultSet set = SQLite.onQuery("SELECT channelid FROM verify WHERE userid = '" + serverMemberJoinEvent.getUser().getIdAsString() + "' ORDER BY id DESC LIMIT 1");
+
             try {
-                channel.sendMessage(embedBuilder).get().addReaction("✅");
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
+                assert set != null;
+                if(set.next()) {
 
-            api.addReactionAddListener(event -> {
-
-                if (event.getEmoji().asUnicodeEmoji().get().equals("✅")) {
-
+                    String channelid = set.getString("channelid");
+                    System.out.println("TextChannel generated [ID:" + channelid + "]");
+                    TextChannel channel = api.getTextChannelById(channelid).get();
                     try {
-                        stepOne(channel.getMessages(1).get().getNewestMessage().get());
+                        channel.sendMessage(embedBuilder).get().addReaction("✅");
                     } catch (InterruptedException | ExecutionException e) {
                         e.printStackTrace();
                     }
 
                 }
-
-            });
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
 
         });
 
@@ -144,7 +148,7 @@ public class Verify {
                 .setTopic("Hier findet die Anmeldung von " + user.getName() + " statt.")
                 .addPermissionOverwrite(user, new PermissionsBuilder(Permissions.fromBitmask(0x00000400)).setAllowed(PermissionType.READ_MESSAGES).setAllowed(PermissionType.READ_MESSAGE_HISTORY).setAllowed(PermissionType.ADD_REACTIONS).build())
                 .addPermissionOverwrite(neu, new PermissionsBuilder(Permissions.fromBitmask(0x00000400)).setAllDenied().build());
-        Test.setTest(String.valueOf(channelBuilder.create().get().getId()));
+        SQLite.onUpdate("INSERT INTO verify(userid, channelid) VALUES('" + user.getIdAsString() + "', '" + channelBuilder.create().get().getIdAsString() + "')");
 
     }
 
