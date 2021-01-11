@@ -1,0 +1,15 @@
+ResultSet set = SQLite.onQuery("SELECT gang FROM gangsystem WHERE name = '" + player.getName() + "' ORDER BY id DESC LIMIT 1");
+
+                            try {
+                                if (set.next()) {
+                                    int coins = set.getInteger("coins");
+
+
+                                    }
+                                }
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+
+
+ SQLite.onUpdate("INSERT INTO gangsystem(name, gang, status) VALUES('" + player.getName() + "', '" + gang + "', 'leader')");
