@@ -6,6 +6,7 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.ServerTextChannelBuilder;
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.emoji.Emoji;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.PermissionType;
@@ -30,6 +31,12 @@ public class Verify {
             .setColor(Color.ORANGE)
             .addField("*Anleitung*", "Hier wirst du ganz einfach durch die Anmeldung geleitet! \n Wenn du bereit bist, drücke einfach unten auf das ✅!")
             .setFooter("Falls es doch noch Probleme gibt, einfach bei einen Supporter Fragen!");
+    public static Emoji sao = api.getCustomEmojiById(798518605595148308L).get();
+    public static Emoji bs = api.getCustomEmojiById(798518660909367326L).get();
+    public static Emoji tow = api.getCustomEmojiById(798518772252016651L).get();
+    public static Emoji gi = api.getCustomEmojiById(798518693599641601L).get();
+    public static Emoji cr = api.getCustomEmojiById(798518727342948373L).get();
+    public static Emoji q = api.getCustomEmojiById(798520850882101270L).get();
 
     public static void init() {
 
@@ -37,6 +44,10 @@ public class Verify {
         sendMessage();
         systemMessage();
         debugMessage();
+        reactionOne();
+        nsfwRoute();
+        sfwRoute();
+        afterNSFW();
 
     }
 
@@ -45,7 +56,7 @@ public class Verify {
         api.addServerMemberJoinListener(serverMemberJoinEvent -> {
 
             User user = serverMemberJoinEvent.getUser();
-            System.out.println(new Date() + user.getDiscriminatedName() + " gejoint.");
+            System.out.println("[" + new Date() + "] " + user.getDiscriminatedName() + " joined.");
             user.addRole(api.getRoleById(797550949551833129L).get());
             Server server = serverMemberJoinEvent.getServer();
 
@@ -62,7 +73,7 @@ public class Verify {
                 if(set.next()) {
 
                     String channelid = set.getString("channelid");
-                    System.out.println("TextChannel generated [ID:" + channelid + "]");
+                    System.out.println("[ID:" + channelid + "] TextChannel generated");
                     TextChannel channel = api.getTextChannelById(channelid).get();
                     try {
                         channel.sendMessage(embedBuilder).get().addReaction("✅");
@@ -152,18 +163,168 @@ public class Verify {
 
     }
 
+    public static void reactionOne() {
+
+        api.addReactionAddListener(event -> {
+
+            Emoji emoji = event.getEmoji();
+            TextChannel channel = event.getChannel();
+
+            ResultSet set = SQLite.onQuery("SELECT channelid FROM verify WHERE userid = '" + event.getUserIdAsString() +  "' ORDER BY id DESC LIMIT 1");
+
+            try {
+                if(set.next()) {
+                    String channelid = set.getString("channelid");
+                    if(channel.getIdAsString().equalsIgnoreCase(channelid)) {
+
+                        if(emoji.equalsEmoji("✅")) {
+
+                            event.getMessage().get().edit(howold);
+                            System.out.println("[STEP:1] complete by " + event.getUser().get().getDiscriminatedName());
+                            event.getMessage().get().removeAllReactions();
+
+                            event.getMessage().get().addReactions("\uD83D\uDC66", "\uD83E\uDDD1", "\uD83D\uDC68");
+
+                        }
+
+                    }
+
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+
+        });
+
+    }
+
     public static void stepOne(Message message) {
 
         message.edit(new EmbedBuilder()
                 .setTitle("Von welchem Spiel hast du zu uns gefunden?")
                 .setDescription("Klicke unten einfach auf das zugehörige Emote.")
-                .addInlineField("Sword Art Online: Integral Factor", "[emote:sao]")
-                .addInlineField("Tales Of Wind", "[emote:tow]")
-                .addInlineField("Brawl Stars", "[emote:bs]")
-                .addInlineField("Clash Royale", "[emote:cr]")
-                .addField("Andere", "[emote:?]")
+                .addInlineField("SAO:IF", "<:sao:798518605595148308>")
+                .addInlineField("Tales Of Wind", "<:tow:798518772252016651>")
+                .addInlineField("Brawl Stars", "<:bs:798518660909367326>")
+                .addInlineField("Clash Royale", "<:cr:798518727342948373>")
+                .addInlineField("Genshin Imapct" , "<:gi:798518693599641601>")
+                .addInlineField("Andere", ":grey_question:")
+                .setColor(Color.ORANGE)
         );
 
     }
+
+    public static void nsfwRoute() {
+
+        api.addReactionAddListener(event -> {
+
+            ResultSet set = SQLite.onQuery("SELECT channelid FROM verify WHERE userid = '" + event.getUserIdAsString() +  "' ORDER BY id DESC LIMIT 1");
+
+            try {
+                if (set.next()) {
+
+                    String channelid = set.getString("channelid");
+                    if(event.getChannel().getIdAsString().equalsIgnoreCase(channelid)) {
+
+                        if(event.getEmoji().equalsEmoji("\uD83E\uDDD1") || event.getEmoji().equalsEmoji("\uD83D\uDC68")) {
+
+                            event.getMessage().get().removeAllReactions();
+                            event.getMessage().get().edit(nsfw);
+                            event.getMessage().get().addReactions("☑️", "❌");
+
+                        }
+
+                    }
+
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+
+    }
+
+    public static void afterNSFW() {
+
+        api.addReactionAddListener(event -> {
+
+            ResultSet set = SQLite.onQuery("SELECT channelid FROM verify WHERE userid = '" + event.getUserIdAsString() +  "' ORDER BY id DESC LIMIT 1");
+
+            try {
+                if (set.next()) {
+
+                    String channelid = set.getString("channelid");
+                    if(event.getChannel().getIdAsString().equalsIgnoreCase(channelid)) {
+
+                        if(event.getEmoji().equalsEmoji("☑️")) {
+
+                            event.getMessage().get().removeAllReactions();
+                            event.getUser().get().addRole(api.getRoleById(798530464309837874L).get());
+                            stepOne(event.getMessage().get());
+                            event.getMessage().get().addReactions(sao, tow, bs, cr, gi, q);
+
+                        } else if(event.getEmoji().equalsEmoji("❌")) {
+
+                            event.getMessage().get().removeAllReactions();
+                            stepOne(event.getMessage().get());
+                            event.getMessage().get().addReactions(sao, tow, bs, cr, gi, q);
+
+                        }
+
+                    }
+
+                }
+            } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+            }
+        });
+    }
+
+    public static void sfwRoute() {
+
+        api.addReactionAddListener(event -> {
+
+            ResultSet set = SQLite.onQuery("SELECT channelid FROM verify WHERE userid = '" + event.getUserIdAsString() +  "' ORDER BY id DESC LIMIT 1");
+
+            try {
+                if (set.next()) {
+
+                    String channelid = set.getString("channelid");
+                    if(event.getChannel().getIdAsString().equalsIgnoreCase(channelid)) {
+
+                        if(event.getEmoji().equalsEmoji("\uD83D\uDC66")) {
+
+                            event.getMessage().get().removeAllReactions();
+                            stepOne(event.getMessage().get());
+                            event.getMessage().get().addReactions(sao, tow, bs, cr, gi, q);
+
+                        }
+
+                    }
+
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+
+    }
+
+    public static EmbedBuilder howold = new EmbedBuilder()
+            .setColor(Color.ORANGE)
+            .setTitle("Wie alt bist du?")
+            .setDescription("Hier kannst du dein Alter auswählen, bitte nur korrekte Angaben. Falls wir dich bei einer Falschaussage erwischen gibt es einen strickten Ban.")
+            .addInlineField("13-16 Jahre", ":boy:")
+            .addInlineField("17-18 Jahre", ":adult:")
+            .addInlineField("18+", ":man:")
+            .setFooter("Falls du über 100 Jahre alt sein solltest, kontaktiere bitte einen Administrator, dieser wird dir weiter helfen können.");
+
+    public static EmbedBuilder nsfw = new EmbedBuilder()
+            .setColor(Color.ORANGE)
+            .setTitle("NSFW-Content?")
+            .setDescription("Weil du älter als 16 bist, bieten wir dir die möglichkeit, zu entscheiden ob du auf einen NSFW-Kanal zugriff haben möchtest? Reagiere einfach mit dem entsprechenden Emote.")
+            .addInlineField("NSFW Ja", "☑️")
+            .addInlineField("NSFW Nein", ":x:")
+            .setFooter("Diese Entscheidung kann später nicht noch einmal getroffen werden, entscheide Weise.");
 
 }

@@ -18,7 +18,7 @@ public class Tamaki {
 
         api = new DiscordApiBuilder()
                 .setToken(OAuth2.getToken)
-                .setIntents(Intent.GUILDS, Intent.GUILD_MEMBERS)
+                .setIntents(Intent.GUILDS, Intent.GUILD_MEMBERS, Intent.GUILD_EMOJIS, Intent.GUILD_MESSAGE_REACTIONS, Intent.GUILD_MESSAGES)
                 .login()
                 .get();
         init();
