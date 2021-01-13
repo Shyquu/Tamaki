@@ -2,6 +2,7 @@ package dev.koo.api;
 
 import dev.koo.database.SQLMan;
 import dev.koo.database.SQLite;
+import dev.koo.utils.sao.GuildSystem;
 import dev.koo.utils.text.OAuth2;
 import dev.koo.utils.verify.Verify;
 import org.javacord.api.DiscordApi;
@@ -35,6 +36,9 @@ public class Tamaki {
 
         // VerifySystem
         Verify.init();
+
+        //GuildSystem
+        GuildSystem.init();
 
         System.out.println("Tamaki gestartet.");
     }

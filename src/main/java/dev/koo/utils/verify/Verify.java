@@ -25,17 +25,17 @@ import java.util.concurrent.ExecutionException;
 public class Verify {
 
     public static DiscordApi api = Tamaki.getApi();
-    public static EmbedBuilder embedBuilder = new EmbedBuilder()
-            .setTitle("Willkommen bei der Anmeldung!")
-            .setColor(Color.ORANGE)
-            .addField("*Anleitung*", "Hier wirst du ganz einfach durch die Anmeldung geleitet! \n Wenn du bereit bist, drücke einfach unten auf das ✅!")
-            .setFooter("Falls es doch noch Probleme gibt, einfach bei einen Supporter Fragen!");
     public static Emoji sao = api.getCustomEmojiById(798518605595148308L).get();
     public static Emoji bs = api.getCustomEmojiById(798518660909367326L).get();
     public static Emoji tow = api.getCustomEmojiById(798518772252016651L).get();
     public static Emoji gi = api.getCustomEmojiById(798518693599641601L).get();
     public static Emoji cr = api.getCustomEmojiById(798518727342948373L).get();
     public static Emoji q = api.getCustomEmojiById(798520850882101270L).get();
+    public static EmbedBuilder embedBuilder = new EmbedBuilder()
+            .setTitle("Willkommen bei der Anmeldung!")
+            .setColor(Color.ORANGE)
+            .addField("*Anleitung*", "Hier wirst du ganz einfach durch die Anmeldung geleitet! \n Wenn du bereit bist, drücke einfach unten auf das ✅!")
+            .setFooter("Falls es doch noch Probleme gibt, einfach bei einen Supporter Fragen!");
     public static EmbedBuilder howold = new EmbedBuilder()
             .setColor(Color.ORANGE)
             .setTitle("Wie alt bist du?")
@@ -51,6 +51,13 @@ public class Verify {
             .addInlineField("NSFW Ja", "☑️")
             .addInlineField("NSFW Nein", ":x:")
             .setFooter("Diese Entscheidung kann später nicht noch einmal getroffen werden, entscheide Weise.");
+    public static EmbedBuilder clan = new EmbedBuilder()
+            .setColor(Color.ORANGE)
+            .setTitle("Clan?")
+            .setDescription("Bist du schon in einem Clan von uns, falls nicht, wähle einfach das Kreuz aus, falls doch, wähle das Häkchen aus.")
+            .addInlineField("Clan [Ja]", "[emote]")
+            .addInlineField("Clan [Nein]", "[emote]")
+            .setFooter("Falls es Probleme gibt, kontaktiere bitte den Support oder einen Admin.");
 
     public static void init() {
 
@@ -95,9 +102,10 @@ public class Verify {
                     } catch (InterruptedException | ExecutionException e) {
                         e.printStackTrace();
                     }
+                    channel.sendMessage("<@" + serverMemberJoinEvent.getUser().getIdAsString() + ">").get().delete();
 
                 }
-            } catch (SQLException throwables) {
+            } catch (SQLException | ExecutionException | InterruptedException throwables) {
                 throwables.printStackTrace();
             }
 
@@ -396,6 +404,41 @@ public class Verify {
                 throwables.printStackTrace();
             }
         });
+    }
+
+    public static void giRoute() {
+
+        api.addReactionAddListener(event -> {
+
+            ResultSet set = SQLite.onQuery("SELECT channelid FROM verify WHERE userid = '" + event.getUserIdAsString() + "' ORDER BY id DESC LIMIT 1");
+
+            try {
+                if (set.next()) {
+
+                    String channelid = set.getString("channelid");
+                    if (event.getChannel().getIdAsString().equalsIgnoreCase(channelid)) {
+
+                        if (event.getEmoji().equalsEmoji(gi)) {
+
+                            event.getMessage().get().removeAllReactions();
+                            event.getChannel().sendMessage(new EmbedBuilder()
+                                    .setColor(Color.ORANGE)
+                                    .setTitle("Info")
+                                    .setDescription("Wir haben dir die Rolle 'Genshin Impact' gegeben. Mit dieser kannst du auf den Genshin Impact Channel zugreifen und dich mit deinen Kameraden austauschen. Falls es noch Fragen zu Genshin Impact gibt, wende dich an unseren Genshin Impact Chat!")
+                                    .addField("Voila!", "Klicke auf das [emote] um weiter zu kommen.")
+                                    .setFooter("Falls es noch andere Fragen gibt, wende dich an einen Supporter oder Admin.")
+                            ).get().addReaction("");
+
+                        }
+
+                    }
+
+                }
+            } catch (SQLException | InterruptedException | ExecutionException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+
     }
 
 }
